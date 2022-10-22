@@ -1,12 +1,17 @@
 <?php
+
 	$servername = "localhost";
-	$username = "umutingi_cms_u";
-	$password = "7@r-XMSL2I]e";
-	$db = "umutingi_cms";
+	$username = "root";
+	$password = "";
 
-	$connect = mysqli_connect($servername, $username, $password, $db);
-
-	if (!$connect) {
-		die("Database Bağlantısı Kurulamadı:" . mysqli_connect_error());
+	try {
+		$connect = new PDO("mysql:host=$servername;dbname=cmsdb", $username, $password);
+		$connect->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+		echo "Database Bağlantısı Başarılı";
 	}
+
+	catch (PDOExpection $e) {
+		echo "Database Bağlantısı Başarısız: " .$e->getMessage();
+	}
+
 ?>
