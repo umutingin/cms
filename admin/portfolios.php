@@ -54,35 +54,30 @@
               </tr>
             </thead>
             <tbody>
+              <!-- delete başarılı -->
               <?php
                 if(isset($_GET['delete'])){
-                  $del_id = mysqli_real_escape_string($connect, $_GET['delete']);
-                  $portfolios = "SELECT * FROM portfolios WHERE portfolio_id = {$del_id} ";
-                  $portfolio = mysqli_query($connect, $portfolios);
-                  $port = mysqli_fetch_assoc($portfolio);
-                  $portfolio_img = $port["portfolio_img"];
-                  if($portfolio_img != ""){
-                    $files = "../assets/img/portfolio/$portfolio_img";
-                    $del_file = unlink($files);
-                  }
-                  $query = "DELETE FROM portfolios WHERE portfolio_id = {$del_id} ";
-                  $del_port_query = mysqli_query($connect,$query);
+                  $query = $connect->prepare("DELETE FROM portfolios WHERE portfolio_id = :id");
+                  $delete = $query->execute(array(
+                     'id' => $_GET['delete']
+                  ));
                   header("Location: portfolios.php");
                 }
               ?>
+              <!-- insert başarılı -->
               <?php
-                if(isset($_POST["add_portfolio"])){
+                if(isset($_POST["add_portfolio"])) {
                   $portfolio_title = $_POST["portfolio_title"];
                   $portfolio_text = $_POST["portfolio_text"];
                   $portfolio_image = $_FILES["image"]["name"];
                   $portfolio_image_temp = $_FILES["image"]["tmp_name"];
                   move_uploaded_file($portfolio_image_temp, "../assets/img/portfolio/$portfolio_image");
-                  $query = "INSERT INTO portfolios (portfolio_title, portfolio_text, portfolio_img)";
-                  $query .= "VALUES ('{$portfolio_title}', '{$portfolio_text}', '{$portfolio_image}')";
-                  $create_portfolio_query = mysqli_query($connect, $query);
+                  $sql = "INSERT INTO portfolios (portfolio_title, portfolio_text, portfolio_img) VALUES (?,?,?)";
+                  $connect->prepare($sql)->execute([$portfolio_title, $portfolio_text, $portfolio_image]);
                   header("Location: portfolios.php");
                 }
               ?>
+              <!-- update başarılı -->
               <?php
                 if(isset($_POST["edit_portfolio"])) {
                   $portfolio_title = $_POST["portfolio_title"];
@@ -90,23 +85,28 @@
                   $portfolio_img = $_FILES["image"]["name"];
                   $portfolio_img_temp = $_FILES["image"]["tmp_name"];
                   if(empty($portfolio_img)) {
-                      $query2 = "SELECT * FROM portfolios WHERE portfolio_id = '$_POST[portfolio_id]'";
-                      $select_image = mysqli_query($connect, $query2);
-                      while($row = mysqli_fetch_array($select_image)) {
+                      $select_image = $connect->query("SELECT * FROM portfolios WHERE portfolio_id = '$_POST[portfolio_id]'");
+                      while($row = $select_image->fetch()) {
                           $portfolio_img = $row["portfolio_img"];
                       }
                   }
                   move_uploaded_file($portfolio_img_temp, "../assets/img/portfolio/$portfolio_img");
-                  $sql_query2 = "UPDATE portfolios SET portfolio_title = '{$portfolio_title}', portfolio_text = '{$portfolio_text}', portfolio_img = '{$portfolio_img}' WHERE portfolio_id = '$_POST[portfolio_id]'";
-                  $edit_portfolio_query = mysqli_query($connect, $sql_query2);
+                  $data = [
+                      'portfolio_title' => $portfolio_title,
+                      'portfolio_text' => $portfolio_text,
+                      'portfolio_img' => $portfolio_img,
+                  ];
+                  $sql = "UPDATE portfolios SET portfolio_title=:portfolio_title, portfolio_text=:portfolio_text, portfolio_img=:portfolio_img WHERE portfolio_id = '$_POST[portfolio_id]'";
+                  $stmt = $connect->prepare($sql);
+                  $stmt->execute($data);
                   header("Location: portfolios.php");
                 }
               ?>
+              <!-- select başarılı -->
               <?php 
-                $sql_query = "SELECT * FROM portfolios ORDER BY portfolio_id ASC";
-                $select_all_portfolios = mysqli_query($connect, $sql_query);
+                $sql = $connect->query("SELECT * FROM portfolios ORDER BY portfolio_id ASC");
                 $x = 1;
-                while ($row = mysqli_fetch_assoc($select_all_portfolios)) {
+                while ($row = $sql->fetch()) {
                   $portfolio_id = $row["portfolio_id"];
                   $portfolio_title = $row["portfolio_title"];
                   $portfolio_text = $row["portfolio_text"];
