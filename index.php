@@ -66,10 +66,9 @@
                 <!-- Portfolio Grid Items-->
                 <div class="row justify-content-center">
                     <?php
-                        $sql_query = "SELECT * FROM portfolios";
-                        $select_all_portfolios = mysqli_query($connect, $sql_query);
+                        $sql = $connect->query("SELECT * FROM portfolios");
                         $x = 1;
-                        while ($row = mysqli_fetch_assoc($select_all_portfolios)) {
+                        while ($row = $sql->fetch()) {
                             $portfolio_id = $row["portfolio_id"];
                             $portfolio_title = $row["portfolio_title"];
                             $portfolio_text = $row["portfolio_text"];
